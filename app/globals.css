@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --red: #DA1222;
+    --red-hover: #B50E1A;
+    --red-glow: rgba(218, 18, 34, 0.3);
+    --red-light: #FDE8EA;
+    
+    --bg-app: #F3F4F6;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #FFFFFF;
+    
+    --text-main: #1F2937;
+    --text-muted: #6B7280;
+    --text-sidebar: #6B7280;
+    --text-sidebar-hover: #1F2937;
+    
+    --border: #E5E7EB;
+    --border-sidebar: #E5E7EB;
+  }
+
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+}
+
+@media print {
+  body {
+    background-color: white !important;
+    margin: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+}
