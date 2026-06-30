@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getInitiatives, createInitiative } from '../../../lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const initiatives = await getInitiatives();

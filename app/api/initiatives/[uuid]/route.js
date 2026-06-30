@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getInitiative, updateInitiative, deleteInitiative } from '../../../../lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request, { params }) {
   try {
     const { uuid } = await params;
