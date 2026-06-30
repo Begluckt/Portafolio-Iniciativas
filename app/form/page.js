@@ -24,7 +24,7 @@ function FormContent() {
   useEffect(() => {
     if (id) {
       setLoading(true);
-      fetch(`/api/initiatives/${id}`)
+      fetch(`/api/initiatives/${id}`, { cache: 'no-store' })
         .then(res => res.json())
         .then(data => {
           if(!data.error) setFormData(data);

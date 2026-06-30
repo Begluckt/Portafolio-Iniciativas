@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/initiatives')
+    fetch('/api/initiatives', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         setInitiatives(Array.isArray(data) ? data : []);
