@@ -5,6 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE public.initiatives (
     uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     ini_id VARCHAR(50),
+    ini_status VARCHAR(50) DEFAULT 'En Evaluación',
     ini_name TEXT NOT NULL,
     ini_owner VARCHAR(255),
     ini_sponsor VARCHAR(255),
