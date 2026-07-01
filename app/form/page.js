@@ -197,7 +197,7 @@ function FormContent() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* STEP 2 */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
