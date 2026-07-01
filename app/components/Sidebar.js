@@ -10,6 +10,11 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
+  // No mostrar el Sidebar en las páginas de login y registro
+  if (pathname === '/login' || pathname === '/register') {
+    return null;
+  }
+
   const handleExport = async () => {
     try {
       const res = await fetch('/api/initiatives');
@@ -26,19 +31,19 @@ export default function Sidebar() {
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Exportación exitosa");
-    } catch(e) {
+    } catch (e) {
       toast.error("Error al exportar");
     }
   };
 
   const handleImport = (e) => {
     const file = e.target.files[0];
-    if(!file) return;
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
         const imported = JSON.parse(evt.target.result);
-        if(Array.isArray(imported)) {
+        if (Array.isArray(imported)) {
           const res = await fetch('/api/initiatives/bulk', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -53,7 +58,7 @@ export default function Sidebar() {
         } else {
           toast.error("El archivo JSON debe contener un arreglo de iniciativas.");
         }
-      } catch(err) {
+      } catch (err) {
         toast.error("Error leyendo o procesando el archivo JSON.");
       }
     };
@@ -73,7 +78,7 @@ export default function Sidebar() {
 
       {/* Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/40 z-[90] md:hidden backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
         />
@@ -87,9 +92,9 @@ export default function Sidebar() {
         <div className="p-6 flex items-center justify-center pt-8 md:pt-6">
           <Image src="/logos_sin_fondo.png" alt="Claro VTR Logo" width={180} height={50} className="object-contain h-12 w-auto" priority />
         </div>
-        
+
         <div className="px-6 mt-4 mb-2 text-[11px] font-bold text-gray-500 tracking-widest uppercase">MENÚ</div>
-        
+
         <nav className="px-3 flex flex-col gap-1">
           <Link onClick={() => setIsOpen(false)} href="/" className={`flex items-center gap-3 w-full p-3 rounded-lg text-sm font-medium transition-all ${pathname === '/' ? 'bg-red-600 text-white font-semibold' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
             <LayoutDashboard size={18} />
