@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { login } from './actions'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useSearchParams, Suspense } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 function LoginContent() {
   const [error, setError] = useState(null)
