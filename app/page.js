@@ -121,6 +121,31 @@ export default function Dashboard() {
     }
   };
 
+  const updateStatus = async (uuid, newStatus) => {
+    try {
+      const ini = initiatives.find(i => i.uuid === uuid);
+      if (!ini) return;
+      
+      const originalStatus = ini.ini_status;
+      setInitiatives(initiatives.map(i => i.uuid === uuid ? { ...i, ini_status: newStatus } : i));
+      
+      const res = await fetch(`/api/initiatives/${uuid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...ini, ini_status: newStatus })
+      });
+      
+      if (!res.ok) {
+        toast.error("Error al actualizar el estado");
+        setInitiatives(initiatives.map(i => i.uuid === uuid ? { ...i, ini_status: originalStatus } : i));
+      } else {
+        toast.success("Estado actualizado");
+      }
+    } catch (e) {
+      toast.error("Error al actualizar el estado");
+    }
+  };
+
   const filtered = filter === 'favorites' 
     ? initiatives.filter(ini => favorites.includes(ini.uuid))
     : initiatives;
@@ -224,15 +249,24 @@ export default function Dashboard() {
                     <span className="bg-gray-100 text-gray-700 border border-gray-200 px-2.5 py-0.5 rounded text-xs font-bold font-mono tracking-wide">
                       {ini.ini_id || 'S/ID'}
                     </span>
-                    <span className={`px-2.5 py-0.5 rounded text-xs font-bold tracking-wide border ${
-                      ini.ini_status === 'Aprobado' ? 'bg-green-50 text-green-700 border-green-200' :
-                      ini.ini_status === 'En Evaluación' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                      ini.ini_status === 'En Ejecución' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                      ini.ini_status === 'Rechazado' ? 'bg-red-50 text-red-700 border-red-200' :
-                      'bg-gray-50 text-gray-600 border-gray-200'
-                    }`}>
-                      {ini.ini_status || 'Borrador'}
-                    </span>
+                    <select
+                      value={ini.ini_status || 'Borrador'}
+                      onChange={(e) => updateStatus(ini.uuid, e.target.value)}
+                      className={`px-2 py-0.5 rounded text-xs font-bold tracking-wide border cursor-pointer outline-none appearance-none ${
+                        ini.ini_status === 'Aprobado' ? 'bg-green-50 text-green-700 border-green-200' :
+                        ini.ini_status === 'En Evaluación' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                        ini.ini_status === 'En Ejecución' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                        ini.ini_status === 'Rechazado' ? 'bg-red-50 text-red-700 border-red-200' :
+                        'bg-gray-50 text-gray-600 border-gray-200'
+                      }`}
+                    >
+                      <option value="Borrador">Borrador</option>
+                      <option value="En Evaluación">En Evaluación</option>
+                      <option value="Aprobado">Aprobado</option>
+                      <option value="En Ejecución">En Ejecución</option>
+                      <option value="Rechazado">Rechazado</option>
+                      <option value="Cerrado">Cerrado</option>
+                    </select>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-400 font-medium">
