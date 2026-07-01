@@ -2,8 +2,117 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Edit2, Printer, DownloadCloud, MonitorPlay } from 'lucide-react';
+import { ArrowLeft, Edit2, Printer, DownloadCloud, MonitorPlay, Share2, Activity } from 'lucide-react';
 import { exportToPPTX } from '../../../lib/exportPptx'; // We'll create this
+import toast from 'react-hot-toast';
+
+function AuditLogViewer({ uuid }) {
+  const [logs, setLogs] = useState([]);
+  
+  useEffect(() => {
+    fetch(`/api/initiatives/${uuid}/history`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setLogs(data);
+      });
+  }, [uuid]);
+
+  if (logs.length === 0) return <div className="text-sm text-gray-500 italic p-4 bg-gray-50 border border-gray-200">No hay historial registrado.</div>;
+
+  return (
+    <div className="space-y-4">
+      {logs.map(log => (
+        <div key={log.id} className="flex gap-4 items-start border-l-2 border-gray-200 pl-4 py-2 relative">
+          <div className="absolute -left-[9px] top-3 w-4 h-4 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
+            <Activity size={10} className="text-gray-500" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-gray-800">{log.action}</span>
+              <span className="text-xs text-gray-400 font-medium">{new Date(log.created_at).toLocaleString('es-ES')}</span>
+            </div>
+            <p className="text-sm text-gray-600 mt-1">
+              Usuario: {log.changed_by} | Estado: {log.changes?.status || '—'}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CommentsSection({ uuid }) {
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  
+  useEffect(() => {
+    fetch(`/api/initiatives/${uuid}/comments`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setComments(data);
+      });
+  }, [uuid]);
+
+  const handlePost = async () => {
+    if (!newComment.trim()) return;
+    try {
+      const res = await fetch(`/api/initiatives/${uuid}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newComment, author_id: 'user' })
+      });
+      const data = await res.json();
+      if (!data.error) {
+        setComments([...comments, data]);
+        setNewComment('');
+        toast.success('Comentario agregado');
+      }
+    } catch(e) {
+      toast.error('Error al agregar comentario');
+    }
+  };
+
+  return (
+    <div className="mt-8 border-t border-gray-200 pt-8 print:hidden">
+      <h3 className="text-lg font-bold text-gray-900 mb-6">Comentarios y Discusión</h3>
+      
+      <div className="space-y-6 mb-8">
+        {comments.length === 0 ? (
+          <p className="text-sm text-gray-500 italic">No hay comentarios aún. Sé el primero en opinar.</p>
+        ) : (
+          comments.map(c => (
+            <div key={c.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-bold text-sm text-gray-800">{c.author_id}</span>
+                <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString('es-ES')}</span>
+              </div>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{c.content}</p>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-red-500 transition-shadow">
+        <textarea 
+          rows="3" 
+          value={newComment}
+          onChange={e => setNewComment(e.target.value)}
+          placeholder="Escribe un comentario..."
+          className="w-full p-4 text-sm focus:outline-none resize-none"
+        ></textarea>
+        <div className="bg-gray-50 px-4 py-3 flex justify-end border-t border-gray-200">
+          <button 
+            onClick={handlePost}
+            disabled={!newComment.trim()}
+            className="bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            Comentar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ReadView({ params }) {
   const router = useRouter();
@@ -20,6 +129,11 @@ export default function ReadView({ params }) {
         setLoading(false);
       });
   }, [uuid]);
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success('Enlace copiado al portapapeles');
+  };
 
   if (loading) return <div className="p-10 text-gray-500">Cargando documento...</div>;
   if (!ini) return <div className="p-10 text-red-500">Iniciativa no encontrada</div>;
@@ -39,6 +153,9 @@ export default function ReadView({ params }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button onClick={handleShare} className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-colors">
+            <Share2 size={18} /> Compartir
+          </button>
           <Link href={`/preview/${uuid}`} className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-colors">
             <MonitorPlay size={18} /> Presentar
           </Link>
@@ -54,9 +171,25 @@ export default function ReadView({ params }) {
         </div>
       </header>
 
-      {/* Document Content */}
-      <div className="p-8 max-w-4xl mx-auto w-full pb-20 print:p-0 print:max-w-full">
-        <div className="bg-white border border-[#E5E5E5] p-12 print:border-none print:shadow-none print:p-0">
+      {/* Main Content Area */}
+      <div className="flex max-w-6xl mx-auto w-full p-8 print:p-0 print:max-w-full gap-8 relative">
+        
+        {/* Table of Contents (Sidebar) */}
+        <aside className="hidden lg:block w-64 shrink-0 print:hidden sticky top-28 h-fit">
+          <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+            <h3 className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-4">Tabla de Contenidos</h3>
+            <nav className="flex flex-col gap-3 text-sm font-medium text-gray-600">
+              <a href="#info" className="hover:text-red-600 transition-colors">Información Estratégica</a>
+              <a href="#context" className="hover:text-red-600 transition-colors">Contexto y Definición</a>
+              <a href="#value" className="hover:text-red-600 transition-colors">Captura de Valor</a>
+              <a href="#eval" className="hover:text-red-600 transition-colors">Evaluación Cuantitativa</a>
+              <a href="#cats" className="hover:text-red-600 transition-colors">Categorización y Detalles</a>
+            </nav>
+          </div>
+        </aside>
+
+        {/* Document Content */}
+        <div className="flex-1 bg-white border border-[#E5E5E5] p-12 print:border-none print:shadow-none print:p-0 shadow-sm rounded-xl print:rounded-none">
           
           <div className="flex justify-between items-start border-b-4 border-[#DA1222] pb-6 mb-8">
             <div className="flex flex-col">
@@ -71,7 +204,7 @@ export default function ReadView({ params }) {
 
           <div className="space-y-8 text-[#333333]">
             
-            <section className="break-inside-avoid">
+            <section id="info" className="break-inside-avoid scroll-mt-24">
               <h4 className="text-sm font-black text-[#DA1222] uppercase tracking-widest mb-4 bg-gray-50 p-2 border-l-4 border-[#DA1222]">Información Estratégica</h4>
               <div className="grid grid-cols-2 gap-y-6 gap-x-8">
                 <div className="border-b border-gray-100 pb-2"><div className="text-[11px] font-bold text-gray-500 mb-1 uppercase">Owner / Área</div><div className="font-medium text-[15px]">{ini.ini_owner || '—'}</div></div>
@@ -81,7 +214,7 @@ export default function ReadView({ params }) {
               </div>
             </section>
 
-            <section className="break-inside-avoid">
+            <section id="context" className="break-inside-avoid scroll-mt-24">
               <h4 className="text-sm font-black text-[#DA1222] uppercase tracking-widest mb-4 bg-gray-50 p-2 border-l-4 border-[#DA1222]">Contexto y Definición</h4>
               <div className="space-y-6">
                 <div><div className="text-[11px] font-bold text-gray-500 mb-1 uppercase">Problema u Oportunidad</div><div className="font-medium text-[14px] bg-[#FDFDFD] border border-[#E5E5E5] p-4 whitespace-pre-wrap">{ini.ini_problem || '—'}</div></div>
@@ -93,7 +226,7 @@ export default function ReadView({ params }) {
               </div>
             </section>
 
-            <section className="break-inside-avoid">
+            <section id="value" className="break-inside-avoid scroll-mt-24">
               <h4 className="text-sm font-black text-[#DA1222] uppercase tracking-widest mb-4 bg-gray-50 p-2 border-l-4 border-[#DA1222]">Captura de Valor</h4>
               <table className="w-full text-left text-[13px] border-collapse border border-[#E5E5E5]">
                 <tbody>
@@ -106,7 +239,7 @@ export default function ReadView({ params }) {
               </table>
             </section>
 
-            <section className="break-inside-avoid">
+            <section id="eval" className="break-inside-avoid scroll-mt-24">
               <h4 className="text-sm font-black text-[#DA1222] uppercase tracking-widest mb-4 bg-gray-50 p-2 border-l-4 border-[#DA1222]">Evaluación Cuantitativa</h4>
               <div className="grid grid-cols-2 gap-8">
                 <div>
@@ -133,7 +266,7 @@ export default function ReadView({ params }) {
               </div>
             </section>
 
-            <section className="break-inside-avoid">
+            <section id="cats" className="break-inside-avoid scroll-mt-24">
               <h4 className="text-sm font-black text-[#DA1222] uppercase tracking-widest mb-4 bg-gray-50 p-2 border-l-4 border-[#DA1222]">Categorización y Detalles</h4>
               <div className="grid grid-cols-4 gap-4 mb-4 border-b border-[#E5E5E5] pb-4">
                 <div><div className="text-[11px] font-bold text-gray-500 mb-1 uppercase">Marca</div><div className="font-medium text-[13px]">{ini.brand || '—'}</div></div>
@@ -149,8 +282,14 @@ export default function ReadView({ params }) {
                 <div className="font-medium text-[14px] bg-[#FDFDFD] border border-[#E5E5E5] p-4 whitespace-pre-wrap">{ini.ini_evaluation_detail || '—'}</div>
               </div>
             </section>
+
+            <section id="history" className="break-inside-avoid scroll-mt-24">
+              <h4 className="text-sm font-black text-[#DA1222] uppercase tracking-widest mb-4 bg-gray-50 p-2 border-l-4 border-[#DA1222]">Historial de Actividad</h4>
+              <AuditLogViewer uuid={uuid} />
+            </section>
           </div>
           
+          <CommentsSection uuid={uuid} />
         </div>
       </div>
     </div>

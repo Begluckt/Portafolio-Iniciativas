@@ -3,6 +3,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Save, MonitorPlay } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 
 function FormContent() {
   const router = useRouter();
@@ -20,6 +22,7 @@ function FormContent() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [initialStatus, setInitialStatus] = useState('Borrador');
 
   useEffect(() => {
     if (id) {
@@ -27,7 +30,10 @@ function FormContent() {
       fetch(`/api/initiatives/${id}`, { cache: 'no-store' })
         .then(res => res.json())
         .then(data => {
-          if(!data.error) setFormData(data);
+          if(!data.error) {
+            setFormData(data);
+            setInitialStatus(data.ini_status || 'Borrador');
+          }
           setLoading(false);
         });
     }
@@ -50,15 +56,22 @@ function FormContent() {
     const url = id ? `/api/initiatives/${id}` : '/api/initiatives';
     const method = id ? 'PUT' : 'POST';
     
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    });
-    
-    alert('Iniciativa guardada correctamente.');
-    if(!id) {
-      router.push('/');
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (res.ok) {
+        toast.success('Iniciativa guardada correctamente.');
+        if(!id) {
+          router.push('/');
+        }
+      } else {
+        toast.error('Error al guardar la iniciativa');
+      }
+    } catch (err) {
+      toast.error('Error al guardar la iniciativa');
     }
   };
 
@@ -88,11 +101,32 @@ function FormContent() {
         </div>
       </header>
 
+      {/* Stepper Visual */}
+      <div className="bg-white border-b border-gray-200 px-8 py-3 sticky top-[73px] z-[9] shadow-sm hidden md:flex justify-center">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          {[
+            { id: 1, label: 'General' },
+            { id: 2, label: 'Contexto' },
+            { id: 3, label: 'Beneficio' },
+            { id: 4, label: 'Evaluación' },
+            { id: 5, label: 'Categorías' }
+          ].map((step, idx) => (
+            <div key={step.id} className="flex items-center">
+              <span className="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold mr-2">
+                {step.id}
+              </span>
+              <span className="text-gray-600">{step.label}</span>
+              {idx < 4 && <span className="mx-4 text-gray-300">/</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="p-8 max-w-4xl mx-auto w-full pb-20">
         <form onSubmit={handleSubmit} className="space-y-6">
           
           {/* STEP 1 */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-4">
               <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 font-bold flex items-center justify-center shrink-0">1</div>
               <div>
@@ -133,7 +167,22 @@ function FormContent() {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-gray-700">Estado de Iniciativa</label>
                   <select name="ini_status" value={formData.ini_status} onChange={handleChange} className="border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-white">
-                    <option>Borrador</option><option>En Evaluación</option><option>Aprobado</option><option>Rechazado</option><option>En Ejecución</option>
+                    {/* Logica de transicion:
+                        Si es nuevo, solo Borrador.
+                        Borrador -> Borrador, En Evaluación
+                        En Evaluación -> En Evaluación, Aprobado, Rechazado
+                        Aprobado -> Aprobado, En Ejecución, Rechazado
+                        En Ejecución -> En Ejecución, Cerrado
+                        Rechazado -> Rechazado, Borrador
+                    */}
+                    {!id && <option>Borrador</option>}
+                    {id && initialStatus === 'Borrador' && <><option>Borrador</option><option>En Evaluación</option></>}
+                    {id && initialStatus === 'En Evaluación' && <><option>En Evaluación</option><option>Aprobado</option><option>Rechazado</option></>}
+                    {id && initialStatus === 'Aprobado' && <><option>Aprobado</option><option>En Ejecución</option><option>Rechazado</option></>}
+                    {id && initialStatus === 'En Ejecución' && <><option>En Ejecución</option><option>Cerrado</option></>}
+                    {id && initialStatus === 'Rechazado' && <><option>Rechazado</option><option>Borrador</option></>}
+                    {id && initialStatus === 'Cerrado' && <><option>Cerrado</option></>}
+                    {id && !['Borrador','En Evaluación','Aprobado','En Ejecución','Rechazado','Cerrado'].includes(initialStatus) && <option>{initialStatus}</option>}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
