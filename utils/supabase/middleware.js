@@ -32,10 +32,11 @@ export async function updateSession(request) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect all routes except /login and /api/auth
+  // Protect all routes except /login, /register, and /api/auth
   if (
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
+    !request.nextUrl.pathname.startsWith('/register') &&
     !request.nextUrl.pathname.startsWith('/api/auth') &&
     !request.nextUrl.pathname.startsWith('/_next') &&
     !request.nextUrl.pathname.includes('.')
@@ -45,8 +46,8 @@ export async function updateSession(request) {
     return NextResponse.redirect(url)
   }
 
-  // If user is logged in and tries to go to login, redirect to home
-  if (user && request.nextUrl.pathname.startsWith('/login')) {
+  // If user is logged in and tries to go to login or register, redirect to home
+  if (user && (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register'))) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)
