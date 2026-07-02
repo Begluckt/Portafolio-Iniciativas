@@ -57,8 +57,9 @@ Campos esperados:
     });
 
     if (!response.ok) {
-      console.error("Huawei API Error:", response.status, await response.text());
-      throw new Error('Error en la API de IA de Huawei');
+      const errorText = await response.text();
+      console.error("Huawei API Error:", response.status, errorText);
+      throw new Error(`Huawei API Error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -67,7 +68,7 @@ Campos esperados:
     // Extracción robusta: Buscar desde la primera '{' hasta la última '}'
     const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error("No se encontró un JSON válido en la respuesta");
+      throw new Error(`No se encontró JSON válido. La IA respondió: ${generatedText.substring(0, 100)}...`);
     }
 
     const extractedData = JSON.parse(jsonMatch[0]);
@@ -76,6 +77,6 @@ Campos esperados:
 
   } catch (error) {
     console.error("AI Extraction error:", error);
-    return NextResponse.json({ error: 'Error al procesar el texto. Verifica que la IA generó un JSON válido.' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
