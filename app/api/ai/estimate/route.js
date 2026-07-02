@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '../../../../utils/supabase/server';
 
+export const maxDuration = 60;
+
 export async function POST(request) {
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
