@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Save, MonitorPlay } from 'lucide-react';
+import { ArrowLeft, Save, MonitorPlay, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
@@ -23,6 +23,33 @@ function FormContent() {
 
   const [loading, setLoading] = useState(false);
   const [initialStatus, setInitialStatus] = useState('Borrador');
+  const [isGenerating, setIsGenerating] = useState({ problem: false, context: false, desired: false });
+
+  const handleAIGenerate = async (field, promptType) => {
+    if (!formData.ini_name || formData.ini_name.trim() === '') {
+      toast.error('Por favor, ingresa el Nombre de la Iniciativa primero.');
+      return;
+    }
+    setIsGenerating(prev => ({ ...prev, [promptType]: true }));
+    try {
+      const res = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ promptType, initiativeName: formData.ini_name })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFormData(prev => ({ ...prev, [field]: data.text }));
+        toast.success('Texto generado con IA');
+      } else {
+        toast.error(data.error || 'Error al generar texto');
+      }
+    } catch (error) {
+      toast.error('Error de conexión con IA');
+    } finally {
+      setIsGenerating(prev => ({ ...prev, [promptType]: false }));
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -208,16 +235,31 @@ function FormContent() {
             </div>
             <div className="p-6 space-y-5">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-gray-700">Problema o oportunidad</label>
+                <div className="flex justify-between items-end">
+                  <label className="text-sm font-semibold text-gray-700">Problema o oportunidad</label>
+                  <button type="button" onClick={() => handleAIGenerate('ini_problem', 'problem')} disabled={isGenerating.problem} className="text-xs flex items-center gap-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2 py-1 rounded transition-colors font-medium disabled:opacity-50">
+                    <Sparkles size={12} /> {isGenerating.problem ? 'Generando...' : 'Autocompletar'}
+                  </button>
+                </div>
                 <textarea name="ini_problem" rows="3" value={formData.ini_problem} onChange={handleChange} className="border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none resize-y" placeholder="Describe el dolor..."></textarea>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-gray-700">Contexto actual (As-Is)</label>
+                  <div className="flex justify-between items-end">
+                    <label className="text-sm font-semibold text-gray-700">Contexto actual (As-Is)</label>
+                    <button type="button" onClick={() => handleAIGenerate('ini_context', 'context')} disabled={isGenerating.context} className="text-xs flex items-center gap-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2 py-1 rounded transition-colors font-medium disabled:opacity-50">
+                      <Sparkles size={12} /> {isGenerating.context ? 'Generando...' : 'Autocompletar'}
+                    </button>
+                  </div>
                   <textarea name="ini_context" rows="3" value={formData.ini_context} onChange={handleChange} className="border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none resize-y" placeholder="¿Cómo se hace hoy?"></textarea>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-gray-700">Situación deseada (To-Be)</label>
+                  <div className="flex justify-between items-end">
+                    <label className="text-sm font-semibold text-gray-700">Situación deseada (To-Be)</label>
+                    <button type="button" onClick={() => handleAIGenerate('ini_desired', 'desired')} disabled={isGenerating.desired} className="text-xs flex items-center gap-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2 py-1 rounded transition-colors font-medium disabled:opacity-50">
+                      <Sparkles size={12} /> {isGenerating.desired ? 'Generando...' : 'Autocompletar'}
+                    </button>
+                  </div>
                   <textarea name="ini_desired" rows="3" value={formData.ini_desired} onChange={handleChange} className="border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none resize-y" placeholder="¿Qué se espera lograr?"></textarea>
                 </div>
               </div>
