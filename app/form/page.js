@@ -48,7 +48,7 @@ function FormContent() {
           ini_context: data.ini_context || prev.ini_context,
           ini_desired: data.ini_desired || prev.ini_desired,
           ini_objective: data.ini_objective || prev.ini_objective,
-          ini_segment: data.ini_segment || prev.ini_segment,
+          segment_type: data.segment_type || prev.segment_type,
           ini_impacted: data.ini_impacted || prev.ini_impacted,
           ini_benefit: data.ini_benefit || prev.ini_benefit,
           impact: (data.impact && Array.isArray(data.impact) && data.impact.length > 0) ? data.impact : prev.impact,
@@ -258,7 +258,7 @@ function FormContent() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-gray-700">Segmento</label>
-                  <select name="ini_segment" value={formData.ini_segment} onChange={handleChange} className="border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                  <select name="segment_type" value={formData.segment_type} onChange={handleChange} className="border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-white">
                     <option value="">Selecciona...</option>
                     <option value="B2B">B2B</option>
                     <option value="B2C">B2C</option>
