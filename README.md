@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gestor de Portafolio de Iniciativas
 
-## Getting Started
+Plataforma desarrollada para centralizar, gestionar y documentar las iniciativas estratégicas (Claro VTR). Permite a múltiples usuarios tener su propio portafolio privado y aislado, visualizar métricas en un dashboard, y presentar el contenido en diversos formatos.
 
-First, run the development server:
+## 🚀 Características Principales
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+* **Sistema Multi-Tenant:** Cada usuario posee una cuenta privada, y sus datos están protegidos a nivel de base de datos.
+* **Canvas de Iniciativas:** Formulario estructurado para levantar información clave (Contexto, Beneficio, Esfuerzos, Riesgos, etc).
+* **Exportación y Respaldos:** 
+  * Exportación de documentos a **PDF** y **PPTX**.
+  * Importación y Exportación masiva en formato **JSON**.
+* **Modo Presentación:** Interfaz limpia sin distracciones (Modo TV) optimizada para proyectar en reuniones y comités.
+* **Dashboard Analítico:** Gráficos y KPI's automáticos basados en el estado de las iniciativas.
+
+## 🛠️ Stack Tecnológico
+
+* **Framework:** [Next.js](https://nextjs.org/) (App Router)
+* **Estilos:** [Tailwind CSS](https://tailwindcss.com/)
+* **Base de Datos & Auth:** [Supabase](https://supabase.com/) (PostgreSQL)
+* **Gráficos:** Recharts
+* **Iconos:** Lucide React
+
+## 🏗️ Arquitectura del Sistema
+
+El sistema utiliza **Row Level Security (RLS)** de PostgreSQL en conjunto con Supabase Auth para garantizar que el backend jamás retorne información a un usuario que no sea dueño del registro.
+
+```mermaid
+graph TD
+    User([Usuario]) -->|Login/Registro| App(Next.js Frontend)
+    User -->|Visualiza / Edita| App
+    
+    subgraph Client [Capa de Presentación]
+        App --> UI(Dashboard & Formularios)
+        UI -->|Genera Localmente| PPTX(Exportación PPTX/PDF)
+        UI -->|Procesa Localmente| JSON(Import/Export JSON)
+    end
+    
+    subgraph Server [Backend - Supabase]
+        App <-->|JWT / Cookies| Auth[Supabase Auth]
+        App <-->|@supabase/ssr| DB[(PostgreSQL)]
+        
+        Auth -.->|Inyecta auth.uid| RLS{Row Level Security}
+        DB --- RLS
+        RLS -.->|Aísla y Filtra Registros| DB
+    end
+    
+    style User fill:#f9f,stroke:#333,stroke-width:2px
+    style Auth fill:#ff9999,stroke:#333
+    style DB fill:#99ccff,stroke:#333
+    style RLS fill:#ffcc99,stroke:#333
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ⚙️ Configuración Local
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+1. Clona el repositorio e instala las dependencias:
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Configura las variables de entorno creando un archivo `.env.local` en la raíz con tus credenciales de Supabase:
+```env
+NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key_de_supabase
+```
 
-## Learn More
+3. Inicia el servidor de desarrollo:
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+El proyecto estará disponible en `http://localhost:3000`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔒 Reglas de Base de Datos (RLS)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Para el correcto funcionamiento, la tabla `initiatives` en Supabase debe contar con la siguiente estructura RLS vinculada a `auth.users`:
 
-## Deploy on Vercel
+```sql
+ALTER TABLE public.initiatives ENABLE ROW LEVEL SECURITY;
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+-- Ver, Crear, Editar y Borrar restringidos al dueño de la sesión:
+CREATE POLICY "Users can access their own initiatives" 
+ON public.initiatives FOR ALL USING (auth.uid() = user_id);
+```
