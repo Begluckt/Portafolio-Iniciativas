@@ -4,6 +4,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- 1. Tabla Principal de Iniciativas
 CREATE TABLE public.initiatives (
     uuid UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     ini_id VARCHAR(50),
     ini_status VARCHAR(50) DEFAULT 'En Evaluación',
     ini_name TEXT NOT NULL,
@@ -63,12 +64,38 @@ ALTER TABLE public.initiatives ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.initiative_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
--- 5. Políticas de Seguridad Básicas (Solo usuarios autenticados pueden leer/escribir)
--- Para Initiatives
-CREATE POLICY "Permitir lectura a usuarios autenticados" ON public.initiatives FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Permitir insertar a usuarios autenticados" ON public.initiatives FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Permitir actualizar a usuarios autenticados" ON public.initiatives FOR UPDATE USING (auth.role() = 'authenticated');
-CREATE POLICY "Permitir borrar a usuarios autenticados" ON public.initiatives FOR DELETE USING (auth.role() = 'authenticated');
+-- Create triggers for timestamps
+CREATE TRIGGER set_timestamp
+BEFORE UPDATE ON public.initiatives
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+-- ==========================================
+-- ROW LEVEL SECURITY (RLS) POLICIES
+-- ==========================================
+
+-- Enable RLS
+ALTER TABLE public.initiatives ENABLE ROW LEVEL SECURITY;
+
+-- 1. Users can only see their own initiatives
+CREATE POLICY "Users can see their own initiatives" 
+ON public.initiatives FOR SELECT 
+USING (auth.uid() = user_id);
+
+-- 2. Users can insert initiatives (user_id is set automatically by DEFAULT auth.uid())
+CREATE POLICY "Users can insert their own initiatives" 
+ON public.initiatives FOR INSERT 
+WITH CHECK (auth.uid() = user_id);
+
+-- 3. Users can update their own initiatives
+CREATE POLICY "Users can update their own initiatives" 
+ON public.initiatives FOR UPDATE 
+USING (auth.uid() = user_id);
+
+-- 4. Users can delete their own initiatives
+CREATE POLICY "Users can delete their own initiatives" 
+ON public.initiatives FOR DELETE 
+USING (auth.uid() = user_id);
 
 -- Para History
 CREATE POLICY "Permitir lectura a usuarios autenticados" ON public.initiative_history FOR SELECT USING (auth.role() = 'authenticated');
