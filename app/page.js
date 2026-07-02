@@ -61,13 +61,17 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Fetch stats once
-  useEffect(() => {
+  const fetchStats = () => {
     fetch('/api/stats', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (!data.error) setStats(data);
       });
+  };
+
+  // Fetch stats once on load
+  useEffect(() => {
+    fetchStats();
   }, []);
 
   // Fetch initiatives when filter or search changes
@@ -87,8 +91,18 @@ export default function Dashboard() {
 
   const deleteInitiative = async (uuid) => {
     if (!confirm('¿Estás seguro de eliminar esta iniciativa?')) return;
-    await fetch(`/api/initiatives/${uuid}`, { method: 'DELETE' });
-    setInitiatives(initiatives.filter(i => i.uuid !== uuid));
+    try {
+      const res = await fetch(`/api/initiatives/${uuid}`, { method: 'DELETE' });
+      if (res.ok) {
+        setInitiatives(initiatives.filter(i => i.uuid !== uuid));
+        fetchStats(); // Update dashboard KPIs dynamically
+        toast.success('Iniciativa eliminada');
+      } else {
+        toast.error('Error al eliminar');
+      }
+    } catch (e) {
+      toast.error('Error de red');
+    }
   };
 
   const duplicateInitiative = async (uuid) => {
