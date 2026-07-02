@@ -2,7 +2,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Edit2, Printer, DownloadCloud, MonitorPlay, Activity } from 'lucide-react';
+import { ArrowLeft, Edit2, Printer, DownloadCloud, MonitorPlay, Activity, Sparkles, Copy, X } from 'lucide-react';
 import { exportToPPTX } from '../../../lib/exportPptx'; // We'll create this
 import toast from 'react-hot-toast';
 
@@ -121,6 +121,35 @@ export default function ReadView({ params }) {
   const resolvedParams = use(params);
   const uuid = resolvedParams.uuid;
 
+  const [pitch, setPitch] = useState('');
+  const [isGeneratingPitch, setIsGeneratingPitch] = useState(false);
+  const [showPitchModal, setShowPitchModal] = useState(false);
+
+  const handleGeneratePitch = async () => {
+    setIsGeneratingPitch(true);
+    setShowPitchModal(true);
+    try {
+      const res = await fetch('/api/ai/pitch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ini)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setPitch(data.pitch);
+    } catch(e) {
+      toast.error('Error al generar pitch');
+      setShowPitchModal(false);
+    } finally {
+      setIsGeneratingPitch(false);
+    }
+  };
+
+  const copyPitch = () => {
+    navigator.clipboard.writeText(pitch);
+    toast.success('Copiado al portapapeles');
+  };
+
   useEffect(() => {
     fetch(`/api/initiatives/${uuid}`)
       .then(res => res.json())
@@ -149,6 +178,9 @@ export default function ReadView({ params }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button onClick={handleGeneratePitch} className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-colors">
+            <Sparkles size={18} /> Generar Pitch (IA)
+          </button>
 
           <Link href={`/preview/${uuid}`} className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-colors">
             <MonitorPlay size={18} /> Presentar
@@ -164,6 +196,42 @@ export default function ReadView({ params }) {
           </Link>
         </div>
       </header>
+
+      {/* Modal Elevator Pitch */}
+      {showPitchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm print:hidden">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-indigo-50">
+              <div className="flex items-center gap-2 text-indigo-800">
+                <Sparkles size={20} className="text-indigo-600" />
+                <h3 className="font-bold text-lg">Elevator Pitch Ejecutivo</h3>
+              </div>
+              <button onClick={() => setShowPitchModal(false)} className="text-gray-400 hover:text-gray-700">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              {isGeneratingPitch ? (
+                <div className="flex flex-col items-center justify-center py-8 text-indigo-600">
+                  <Sparkles size={32} className="animate-pulse mb-3" />
+                  <p className="font-medium">Redactando un pitch persuasivo...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg text-gray-800 text-lg leading-relaxed shadow-inner">
+                    {pitch}
+                  </div>
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button onClick={copyPitch} className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                      <Copy size={16} /> Copiar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex max-w-6xl mx-auto w-full p-8 print:p-0 print:max-w-full gap-8 relative">

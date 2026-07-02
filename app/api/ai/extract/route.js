@@ -62,14 +62,13 @@ Campos esperados:
     const data = await response.json();
     let generatedText = data.choices[0].message.content.trim();
     
-    // Fallback por si la IA devuelve markdown code blocks
-    if (generatedText.startsWith('```json')) {
-      generatedText = generatedText.replace(/```json/g, '').replace(/```/g, '').trim();
-    } else if (generatedText.startsWith('```')) {
-      generatedText = generatedText.replace(/```/g, '').trim();
+    // Extracción robusta: Buscar desde la primera '{' hasta la última '}'
+    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No se encontró un JSON válido en la respuesta");
     }
 
-    const extractedData = JSON.parse(generatedText);
+    const extractedData = JSON.parse(jsonMatch[0]);
 
     return NextResponse.json(extractedData);
 

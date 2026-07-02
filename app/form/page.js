@@ -26,6 +26,7 @@ function FormContent() {
   const [isGenerating, setIsGenerating] = useState({ problem: false, context: false, desired: false });
   const [dialogue, setDialogue] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isEstimating, setIsEstimating] = useState(false);
 
   const handleAIExtract = async () => {
     if (!dialogue || dialogue.trim() === '') {
@@ -90,6 +91,42 @@ function FormContent() {
       toast.error('Error de conexión con IA');
     } finally {
       setIsGenerating(prev => ({ ...prev, [promptType]: false }));
+    }
+  };
+
+  const handleEstimateAI = async () => {
+    if (!formData.ini_problem && !formData.ini_context && !formData.ini_desired) {
+      toast.error('Llena al menos el problema, contexto o situación deseada para poder estimar.');
+      return;
+    }
+    
+    setIsEstimating(true);
+    const toastId = toast.loading('Calculando estimaciones con IA...');
+    try {
+      const res = await fetch('/api/ai/estimate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          problem: formData.ini_problem,
+          context: formData.ini_context,
+          desired: formData.ini_desired
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al estimar');
+      
+      setFormData(prev => ({
+        ...prev,
+        dur_time: data.dur_time || prev.dur_time,
+        dur_cost: data.dur_cost || prev.dur_cost,
+        dur_uncertainty: data.dur_uncertainty || prev.dur_uncertainty
+      }));
+      toast.success('¡Estimación completada!', { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || 'Error en la IA', { id: toastId });
+    } finally {
+      setIsEstimating(false);
     }
   };
 
@@ -364,9 +401,20 @@ function FormContent() {
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-4">
-                <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 font-bold flex items-center justify-center shrink-0">4</div>
-                <h3 className="text-lg font-bold text-gray-900">Evaluación</h3>
+              <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 font-bold flex items-center justify-center shrink-0">4</div>
+                  <h3 className="text-lg font-bold text-gray-900">Evaluación</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleEstimateAI}
+                  disabled={isEstimating}
+                  className="flex items-center gap-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {isEstimating ? <span className="animate-spin">⏳</span> : <Sparkles size={16} />}
+                  Sugerir T-Shirt Sizing
+                </button>
               </div>
               <div className="p-6 grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5"><label className="text-sm font-semibold text-gray-700">Ingresos (MM)</label><input name="val_revenue" value={formData.val_revenue} onChange={handleChange} className="border border-gray-300 rounded-lg p-2.5 text-sm" /></div>
