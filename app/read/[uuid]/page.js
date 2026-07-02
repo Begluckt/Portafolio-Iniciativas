@@ -2,7 +2,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Edit2, Printer, DownloadCloud, MonitorPlay, Share2, Activity } from 'lucide-react';
+import { ArrowLeft, Edit2, Printer, DownloadCloud, MonitorPlay, Activity } from 'lucide-react';
 import { exportToPPTX } from '../../../lib/exportPptx'; // We'll create this
 import toast from 'react-hot-toast';
 
@@ -130,10 +130,6 @@ export default function ReadView({ params }) {
       });
   }, [uuid]);
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success('Enlace copiado al portapapeles');
-  };
 
   if (loading) return <div className="p-10 text-gray-500">Cargando documento...</div>;
   if (!ini) return <div className="p-10 text-red-500">Iniciativa no encontrada</div>;
@@ -153,9 +149,7 @@ export default function ReadView({ params }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={handleShare} className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-colors">
-            <Share2 size={18} /> Compartir
-          </button>
+
           <Link href={`/preview/${uuid}`} className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-colors">
             <MonitorPlay size={18} /> Presentar
           </Link>
