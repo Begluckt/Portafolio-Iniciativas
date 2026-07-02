@@ -3,8 +3,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Edit3, Download, Upload, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FileText, Edit3, Download, Upload, Menu, X, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { logout } from '../logout/actions';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -125,6 +126,11 @@ export default function Sidebar() {
             <span>Importar JSON</span>
             <input type="file" accept=".json" className="hidden" onChange={handleImport} />
           </label>
+          <div className="h-px bg-gray-200 my-2"></div>
+          <button onClick={() => logout()} className="flex items-center gap-3 w-full p-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-all text-left">
+            <LogOut size={18} />
+            <span>Cerrar Sesión</span>
+          </button>
         </div>
       </aside>
     </>
