@@ -26,28 +26,23 @@ El sistema utiliza **Row Level Security (RLS)** de PostgreSQL en conjunto con Su
 
 ```mermaid
 graph TD
-    User([Usuario]) -->|Login/Registro| App(Next.js Frontend)
-    User -->|Visualiza / Edita| App
+    User([Usuario]) -->|Login o Registro| App(Next.js Frontend)
+    User -->|Visualiza o Edita| App
     
-    subgraph Client [Capa de Presentación]
-        App --> UI(Dashboard & Formularios)
-        UI -->|Genera Localmente| PPTX(Exportación PPTX/PDF)
-        UI -->|Procesa Localmente| JSON(Import/Export JSON)
+    subgraph Client [Capa de Presentacion]
+        App --> UI(Dashboard y Formularios)
+        UI -->|Genera Localmente| PPTX(Exportacion PPTX y PDF)
+        UI -->|Procesa Localmente| JSON(Import y Export JSON)
     end
     
-    subgraph Server [Backend - Supabase]
-        App <-->|JWT / Cookies| Auth[Supabase Auth]
-        App <-->|@supabase/ssr| DB[(PostgreSQL)]
+    subgraph Server [Backend Supabase]
+        App -->|JWT y Cookies| Auth[Supabase Auth]
+        App -->|supabase-ssr| DB[(PostgreSQL)]
         
         Auth -.->|Inyecta auth.uid| RLS{Row Level Security}
-        DB --- RLS
-        RLS -.->|Aísla y Filtra Registros| DB
+        DB -.-> RLS
+        RLS -.->|Aisla y Filtra Registros| DB
     end
-    
-    style User fill:#f9f,stroke:#333,stroke-width:2px
-    style Auth fill:#ff9999,stroke:#333
-    style DB fill:#99ccff,stroke:#333
-    style RLS fill:#ffcc99,stroke:#333
 ```
 
 ## ⚙️ Configuración Local
