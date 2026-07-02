@@ -7,6 +7,8 @@ CREATE TABLE public.initiatives (
     user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     ini_id VARCHAR(50),
     ini_status VARCHAR(50) DEFAULT 'En Evaluación',
+    ini_priority VARCHAR(50) DEFAULT 'Normal',
+    ini_link TEXT,
     ini_name TEXT NOT NULL,
     ini_owner VARCHAR(255),
     ini_sponsor VARCHAR(255),
