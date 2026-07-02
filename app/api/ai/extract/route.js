@@ -34,6 +34,10 @@ Campos esperados:
   "segment_type": "Elige estrictamente una de estas opciones, o vacío: 'B2B', 'B2C', 'Ambas'",
   "ini_impacted": "Áreas o procesos secundarios impactados (ej. Call Center, Terreno)",
   "ini_benefit": "El beneficio esperado (si se menciona en la descripción)",
+  "ini_benefit_desc": "Descripción detallada de cómo se logrará o en qué consiste el beneficio",
+  "ini_goal": "La meta cuantitativa o cualitativa esperada (ej. 100%, 50M, reducir a 0)",
+  "ini_capture_date": "Cuándo se espera capturar el beneficio (ej. Q3 2024, Enero, Inmediato)",
+  "ini_measurement": "Quién o qué área será responsable de medirlo",
   "impact": ["Arreglo de strings. Opciones válidas estrictas: 'Eficiencia (ahorro)', 'Ingresos', 'Reg. / Norm.', 'Exp. Cliente', 'Obs. Tecnológica', 'Reporte', 'Ciberseguridad', 'Otro'"],
   "brand": "Elige estrictamente una o vacío: 'Claro', 'VTR', 'Claro y VTR'",
   "network": "Elige estrictamente una o vacío: 'Móvil', 'Fijo', 'Convergente'"
