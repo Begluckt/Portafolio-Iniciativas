@@ -57,7 +57,7 @@ export default function PresentationView({ params }) {
   if (!ini) return <div className="p-10 text-red-500">Iniciativa no encontrada</div>;
 
   // Helpers to render checkmarks
-  const isObj = (val) => ini.ini_objective === val;
+  const isObj = (val) => Array.isArray(ini.impact) && ini.impact.includes(val);
   const hasImpact = (val) => (ini.impact || []).includes(val);
 
   return (
