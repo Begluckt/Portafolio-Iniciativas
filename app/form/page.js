@@ -52,6 +52,10 @@ function FormContent() {
           segment_type: data.segment_type || prev.segment_type,
           ini_impacted: data.ini_impacted || prev.ini_impacted,
           ini_benefit: data.ini_benefit || prev.ini_benefit,
+          ini_benefit_desc: data.ini_benefit_desc || prev.ini_benefit_desc,
+          ini_goal: data.ini_goal || prev.ini_goal,
+          ini_capture_date: data.ini_capture_date || prev.ini_capture_date,
+          ini_measurement: data.ini_measurement || prev.ini_measurement,
           impact: (data.impact && Array.isArray(data.impact) && data.impact.length > 0) ? data.impact : prev.impact,
           brand: data.brand || prev.brand,
           network: data.network || prev.network
