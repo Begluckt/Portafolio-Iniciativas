@@ -63,10 +63,9 @@ function FormContent() {
         body: JSON.stringify(formData)
       });
       if (res.ok) {
+        const data = await res.json();
         toast.success('Iniciativa guardada correctamente.');
-        if(!id) {
-          router.push('/');
-        }
+        router.push(`/read/${data.uuid || id}`);
       } else {
         toast.error('Error al guardar la iniciativa');
       }
