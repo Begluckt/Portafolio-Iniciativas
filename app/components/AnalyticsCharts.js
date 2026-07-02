@@ -1,7 +1,15 @@
 'use client';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
+const STATUS_COLORS = {
+  'Aprobado': '#22c55e', // green-500
+  'En Evaluación': '#eab308', // yellow-500
+  'En Ejecución': '#3b82f6', // blue-500
+  'Rechazado': '#ef4444', // red-500
+  'Borrador': '#9ca3af', // gray-400
+  'Cerrado': '#6b7280', // gray-500
+};
+const DEFAULT_COLOR = '#8b5cf6';
 
 export default function AnalyticsCharts({ initiatives }) {
   if (!initiatives || initiatives.length === 0) return null;
@@ -38,7 +46,7 @@ export default function AnalyticsCharts({ initiatives }) {
                 dataKey="value"
               >
                 {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || DEFAULT_COLOR} />
                 ))}
               </Pie>
               <Tooltip />
