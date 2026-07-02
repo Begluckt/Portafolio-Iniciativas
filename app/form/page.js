@@ -24,6 +24,45 @@ function FormContent() {
   const [loading, setLoading] = useState(false);
   const [initialStatus, setInitialStatus] = useState('Borrador');
   const [isGenerating, setIsGenerating] = useState({ problem: false, context: false, desired: false });
+  const [dialogue, setDialogue] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
+
+  const handleAIExtract = async () => {
+    if (!dialogue || dialogue.trim() === '') {
+      toast.error('Escribe una descripción primero.');
+      return;
+    }
+    setIsExtracting(true);
+    try {
+      const res = await fetch('/api/ai/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dialogue })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFormData(prev => ({
+          ...prev,
+          ini_name: data.ini_name || prev.ini_name,
+          ini_problem: data.ini_problem || prev.ini_problem,
+          ini_context: data.ini_context || prev.ini_context,
+          ini_desired: data.ini_desired || prev.ini_desired,
+          ini_objective: data.ini_objective || prev.ini_objective,
+          ini_segment: data.ini_segment || prev.ini_segment,
+          ini_impacted: data.ini_impacted || prev.ini_impacted,
+          ini_benefit: data.ini_benefit || prev.ini_benefit
+        }));
+        toast.success('Formulario autocompletado con éxito');
+        setDialogue('');
+      } else {
+        toast.error(data.error || 'Error al extraer información');
+      }
+    } catch (error) {
+      toast.error('Error de conexión con IA');
+    } finally {
+      setIsExtracting(false);
+    }
+  };
 
   const handleAIGenerate = async (field, promptType) => {
     if (!formData.ini_name || formData.ini_name.trim() === '') {
@@ -151,6 +190,36 @@ function FormContent() {
       <div className="p-8 max-w-4xl mx-auto w-full pb-20">
         <form onSubmit={handleSubmit} className="space-y-6">
           
+          {/* ASISTENTE MAGICO */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow-sm border border-indigo-100 overflow-hidden mb-6">
+            <div className="px-6 py-4 border-b border-indigo-100 flex items-center gap-3">
+              <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600"><Sparkles size={20} /></div>
+              <div>
+                <h3 className="text-lg font-bold text-indigo-900">Asistente Mágico</h3>
+                <p className="text-sm text-indigo-700">Describe tu iniciativa con tus propias palabras y la IA rellenará el formulario por ti.</p>
+              </div>
+            </div>
+            <div className="p-6">
+              <textarea 
+                value={dialogue}
+                onChange={(e) => setDialogue(e.target.value)}
+                rows="3" 
+                placeholder="Ej: Quiero implementar un sistema de biometría en sucursal para reducir el fraude. Esto impacta a Atención al Cliente y Legal, y esperamos bajar las suplantaciones a cero..."
+                className="w-full border border-indigo-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-y mb-3 bg-white"
+              ></textarea>
+              <div className="flex justify-end">
+                <button 
+                  type="button" 
+                  onClick={handleAIExtract}
+                  disabled={isExtracting}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-all disabled:opacity-50"
+                >
+                  <Sparkles size={16} /> {isExtracting ? 'Procesando...' : 'Autocompletar Formulario'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+
           {/* STEP 1 */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-4">
