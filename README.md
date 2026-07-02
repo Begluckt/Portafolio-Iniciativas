@@ -1,40 +1,52 @@
 # Gestor de Portafolio de Iniciativas
 
-Plataforma desarrollada para centralizar, gestionar y documentar las iniciativas estratégicas (Claro VTR). Permite a múltiples usuarios tener su propio portafolio privado y aislado, visualizar métricas en un dashboard, y presentar el contenido en diversos formatos.
+Plataforma empresarial desarrollada para centralizar, gestionar y documentar las iniciativas estratégicas (ej. Claro VTR). Permite a múltiples usuarios tener su propio portafolio privado y aislado, potenciar la captura de información mediante **Inteligencia Artificial**, visualizar métricas en un dashboard interactivo, y exportar reportes ejecutivos.
 
 ## 🚀 Características Principales
 
-* **Sistema Multi-Tenant:** Cada usuario posee una cuenta privada, y sus datos están protegidos a nivel de base de datos.
-* **Canvas de Iniciativas:** Formulario estructurado para levantar información clave (Contexto, Beneficio, Esfuerzos, Riesgos, etc).
+* **Súper-Poderes de Inteligencia Artificial (DeepSeek LLM):**
+  * **Autocompletar Inteligente:** Pega cualquier correo o descripción informal de un proyecto, y la IA extraerá y estructurará automáticamente la información en el formulario Canvas.
+  * **Estimador de T-Shirt Sizing:** La IA lee tu problema y contexto, y te sugiere de manera automática los esfuerzos de tiempo, costo y niveles de incertidumbre técnica.
+  * **Elevator Pitch Ejecutivo:** En un solo clic, la IA lee la iniciativa técnica y redacta un resumen persuasivo de 3 líneas enfocado puramente en el ROI para presentar a gerencia.
+* **Sistema Multi-Tenant y Seguridad:** Cada usuario posee una cuenta privada. Sus datos están protegidos a nivel de base de datos usando Supabase Auth y RLS.
+* **Trazabilidad y Colaboración:**
+  * **Audit Log (Historial):** Registro automático de cada cambio de estado, edición o acción realizada en la iniciativa.
+  * **Comentarios:** Hilo de discusión en tiempo real para cada iniciativa.
 * **Exportación y Respaldos:** 
   * Exportación de documentos a **PDF** y **PPTX**.
-  * Importación y Exportación masiva en formato **JSON**.
+  * Importación masiva (Upsert) y Exportación en formato **JSON**.
 * **Modo Presentación:** Interfaz limpia sin distracciones (Modo TV) optimizada para proyectar en reuniones y comités.
-* **Dashboard Analítico:** Gráficos y KPI's automáticos basados en el estado de las iniciativas.
+* **Dashboard Analítico:** Gráficos y KPI's automáticos en tiempo real basados en el estado y marca de las iniciativas.
 
 ## 🛠️ Stack Tecnológico
 
 * **Framework:** [Next.js](https://nextjs.org/) (App Router)
 * **Estilos:** [Tailwind CSS](https://tailwindcss.com/)
 * **Base de Datos & Auth:** [Supabase](https://supabase.com/) (PostgreSQL)
+* **Inteligencia Artificial:** Huawei Cloud ModelArts (DeepSeek V3)
+* **Testing:** Jest & React Testing Library
 * **Gráficos:** Recharts
-* **Iconos:** Lucide React
 
 ## 🏗️ Arquitectura del Sistema
 
-El sistema utiliza **Row Level Security (RLS)** de PostgreSQL en conjunto con Supabase Auth para garantizar que el backend jamás retorne información a un usuario que no sea dueño del registro.
+El sistema utiliza **Row Level Security (RLS)** de PostgreSQL en conjunto con Supabase Auth para garantizar la privacidad de los datos, integrándose con ModelArts para la orquestación de prompts de Inteligencia Artificial.
 
 ```mermaid
 graph TD
     User([Usuario]) -->|Login o Registro| App(Next.js Frontend)
-    User -->|Visualiza o Edita| App
+    User -->|Carga Texto Informal| App
     
     subgraph Client [Capa de Presentacion]
         App --> UI(Dashboard y Formularios)
-        UI -->|Genera Localmente| PPTX(Exportacion PPTX y PDF)
-        UI -->|Procesa Localmente| JSON(Import y Export JSON)
+        UI -->|Genera| PPTX(Exportacion PPTX y PDF)
     end
     
+    subgraph AI [Motor de Inteligencia Artificial]
+        App -->|API Routes| AI_R[Rutas de Extracción y Estimación]
+        AI_R -->|Petición HTTPS| Huawei[Huawei Cloud / DeepSeek]
+        Huawei -.->|Respuesta Estructurada JSON| AI_R
+    end
+
     subgraph Server [Backend Supabase]
         App -->|JWT y Cookies| Auth[Supabase Auth]
         App -->|supabase-ssr| DB[(PostgreSQL)]
@@ -52,10 +64,13 @@ graph TD
 npm install
 ```
 
-2. Configura las variables de entorno creando un archivo `.env.local` en la raíz con tus credenciales de Supabase:
+2. Configura las variables de entorno creando un archivo `.env.local` en la raíz con tus credenciales de Supabase y de la IA:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key_de_supabase
+
+HUAWEI_LLM_URL=https://api-ap-southeast-1.modelarts-maas.com/v2/chat/completions
+HUAWEI_LLM_API_KEY=tu_api_key_de_huawei_cloud
 ```
 
 3. Inicia el servidor de desarrollo:
@@ -67,12 +82,13 @@ El proyecto estará disponible en `http://localhost:3000`.
 
 ## 🔒 Reglas de Base de Datos (RLS)
 
-Para el correcto funcionamiento, la tabla `initiatives` en Supabase debe contar con la siguiente estructura RLS vinculada a `auth.users`:
+Para el correcto funcionamiento, las tablas en Supabase deben contar con políticas RLS vinculadas a `auth.users`:
 
 ```sql
 ALTER TABLE public.initiatives ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.initiative_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.initiative_comments ENABLE ROW LEVEL SECURITY;
 
--- Ver, Crear, Editar y Borrar restringidos al dueño de la sesión:
 CREATE POLICY "Users can access their own initiatives" 
 ON public.initiatives FOR ALL USING (auth.uid() = user_id);
 ```
