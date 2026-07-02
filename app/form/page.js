@@ -50,7 +50,10 @@ function FormContent() {
           ini_objective: data.ini_objective || prev.ini_objective,
           ini_segment: data.ini_segment || prev.ini_segment,
           ini_impacted: data.ini_impacted || prev.ini_impacted,
-          ini_benefit: data.ini_benefit || prev.ini_benefit
+          ini_benefit: data.ini_benefit || prev.ini_benefit,
+          impact: (data.impact && Array.isArray(data.impact) && data.impact.length > 0) ? data.impact : prev.impact,
+          brand: data.brand || prev.brand,
+          network: data.network || prev.network
         }));
         toast.success('Formulario autocompletado con éxito');
         setDialogue('');
@@ -255,7 +258,12 @@ function FormContent() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-gray-700">Segmento</label>
-                  <input name="ini_segment" value={formData.ini_segment} onChange={handleChange} className="border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none" placeholder="Línea de trabajo" />
+                  <select name="ini_segment" value={formData.ini_segment} onChange={handleChange} className="border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                    <option value="">Selecciona...</option>
+                    <option value="B2B">B2B</option>
+                    <option value="B2C">B2C</option>
+                    <option value="Ambas">Ambas</option>
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
@@ -394,7 +402,7 @@ function FormContent() {
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="text-sm font-bold text-gray-800 mb-3 block uppercase tracking-wide">Marca</label>
                   <div className="flex flex-col gap-2">
@@ -402,18 +410,6 @@ function FormContent() {
                       <label key={t} className={`cursor-pointer px-4 py-2 rounded-lg border text-sm font-medium transition-colors flex items-center gap-2 ${formData.brand === t ? 'bg-red-50 border-red-300 text-red-700' : 'bg-white border-gray-200 text-gray-600'}`}>
                         <input type="radio" name="brand" value={t} checked={formData.brand === t} onChange={handleChange} className="hidden" />
                         <div className={`w-3.5 h-3.5 rounded-full border ${formData.brand === t ? 'border-[4px] border-red-600' : 'border-gray-300'}`}></div>
-                        {t}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-bold text-gray-800 mb-3 block uppercase tracking-wide">Segmento</label>
-                  <div className="flex flex-col gap-2">
-                    {['B2B', 'B2C', 'Ambas'].map(t => (
-                      <label key={t} className={`cursor-pointer px-4 py-2 rounded-lg border text-sm font-medium transition-colors flex items-center gap-2 ${formData.segment_type === t ? 'bg-red-50 border-red-300 text-red-700' : 'bg-white border-gray-200 text-gray-600'}`}>
-                        <input type="radio" name="segment_type" value={t} checked={formData.segment_type === t} onChange={handleChange} className="hidden" />
-                        <div className={`w-3.5 h-3.5 rounded-full border ${formData.segment_type === t ? 'border-[4px] border-red-600' : 'border-gray-300'}`}></div>
                         {t}
                       </label>
                     ))}

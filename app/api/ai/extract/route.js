@@ -20,7 +20,7 @@ export async function POST(request) {
     const systemPrompt = `Eres un asistente de IA experto en telecomunicaciones para una plataforma de Portafolio de Iniciativas.
 El usuario te dará una descripción informal de su proyecto. Tu tarea es extraer la información y mapearla estrictamente en el siguiente formato JSON.
 No agregues formato markdown como \`\`\`json, SOLO devuelve el objeto JSON crudo.
-Si algún campo no es mencionado o no puedes inferirlo claramente, déjalo como string vacío "".
+Si algún campo no es mencionado o no puedes inferirlo claramente, déjalo como string vacío "". En el caso de arreglos, devuelve [].
 
 Campos esperados:
 {
@@ -29,9 +29,12 @@ Campos esperados:
   "ini_context": "El contexto actual As-Is (máximo 40 palabras)",
   "ini_desired": "La situación deseada To-Be (máximo 40 palabras)",
   "ini_objective": "Objetivo estratégico (ej. Reducción de costos, Mejora de NPS, Ciberseguridad, etc)",
-  "ini_segment": "El segmento o área principal",
+  "ini_segment": "Elige estrictamente una de estas opciones, o vacío: 'B2B', 'B2C', 'Ambas'",
   "ini_impacted": "Áreas o procesos secundarios impactados (ej. Call Center, Terreno)",
-  "ini_benefit": "El beneficio esperado (si se menciona en la descripción)"
+  "ini_benefit": "El beneficio esperado (si se menciona en la descripción)",
+  "impact": ["Arreglo de strings. Opciones válidas estrictas: 'Eficiencia (ahorro)', 'Ingresos', 'Reg. / Norm.', 'Exp. Cliente', 'Obs. Tecnológica', 'Reporte', 'Ciberseguridad', 'Otro'"],
+  "brand": "Elige estrictamente una o vacío: 'Claro', 'VTR', 'Claro y VTR'",
+  "network": "Elige estrictamente una o vacío: 'Móvil', 'Fijo', 'Convergente'"
 }`;
 
     const userPrompt = `Descripción del proyecto:\n\n"${dialogue}"`;
