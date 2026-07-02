@@ -48,10 +48,13 @@ Campos esperados en el JSON:
 
     const data = await response.json();
     let text = data.choices[0].message.content.trim();
-    if (text.startsWith('```json')) text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    else if (text.startsWith('```')) text = text.replace(/```/g, '').trim();
+    
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No se encontró un JSON válido en la respuesta");
+    }
 
-    return NextResponse.json(JSON.parse(text));
+    return NextResponse.json(JSON.parse(jsonMatch[0]));
   } catch (error) {
     console.error("AI Estimate error:", error);
     return NextResponse.json({ error: 'Error al procesar el texto. Verifica que la IA generó un JSON válido.' }, { status: 500 });
