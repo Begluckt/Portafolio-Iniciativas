@@ -29,7 +29,7 @@ Campos esperados:
   "ini_context": "El contexto actual As-Is (máximo 40 palabras)",
   "ini_desired": "La situación deseada To-Be (máximo 40 palabras)",
   "ini_objective": "Objetivo estratégico (ej. Reducción de costos, Mejora de NPS, Ciberseguridad, etc)",
-  "ini_segment": "Elige estrictamente una de estas opciones, o vacío: 'B2B', 'B2C', 'Ambas'",
+  "segment_type": "Elige estrictamente una de estas opciones, o vacío: 'B2B', 'B2C', 'Ambas'",
   "ini_impacted": "Áreas o procesos secundarios impactados (ej. Call Center, Terreno)",
   "ini_benefit": "El beneficio esperado (si se menciona en la descripción)",
   "impact": ["Arreglo de strings. Opciones válidas estrictas: 'Eficiencia (ahorro)', 'Ingresos', 'Reg. / Norm.', 'Exp. Cliente', 'Obs. Tecnológica', 'Reporte', 'Ciberseguridad', 'Otro'"],
