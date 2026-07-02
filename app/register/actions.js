@@ -10,7 +10,7 @@ export async function register(formData) {
   const email = formData.get('email')
   const password = formData.get('password')
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
   })
@@ -19,8 +19,11 @@ export async function register(formData) {
     return { error: error.message }
   }
 
-  // Si se desactivó la confirmación de email en Supabase, signUp ya inició la sesión.
-  // Revalidamos y redirigimos al inicio.
+  // Si la sesión es nula significa que Supabase requiere verificación de correo
+  if (data?.user && data?.session === null) {
+    return { success: true, message: '¡Registro exitoso! Revisa tu bandeja de entrada para verificar tu cuenta.' }
+  }
+
   revalidatePath('/', 'layout')
   redirect('/')
 }

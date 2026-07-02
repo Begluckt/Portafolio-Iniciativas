@@ -7,12 +7,14 @@ import Link from 'next/link'
 
 export default function RegisterPage() {
   const [error, setError] = useState(null)
+  const [successMsg, setSuccessMsg] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setSuccessMsg(null)
     
     const formData = new FormData(e.currentTarget)
     const result = await register(formData)
@@ -20,6 +22,10 @@ export default function RegisterPage() {
     if (result?.error) {
       setError(result.error)
       setLoading(false)
+    } else if (result?.success) {
+      setSuccessMsg(result.message)
+      setLoading(false)
+      e.currentTarget.reset()
     }
   }
 
@@ -76,6 +82,16 @@ export default function RegisterPage() {
                 <div className="flex">
                   <div className="ml-3">
                     <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {successMsg && (
+              <div className="bg-green-50 border-l-4 border-green-400 p-4">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm text-green-700">{successMsg}</p>
                   </div>
                 </div>
               </div>
